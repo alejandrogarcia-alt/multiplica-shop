@@ -3,12 +3,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User } from 'lucide-react';
 import { Message, MLProduct } from '@/types';
+import { useCart } from '@/contexts/CartContext';
 
 interface ChatPanelProps {
   onProductsFound: (products: MLProduct[]) => void;
 }
 
 export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
+  const { addToCart } = useCart();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -19,6 +21,7 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [lastProducts, setLastProducts] = useState<MLProduct[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -49,7 +52,10 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({
+          message: input,
+          lastProducts: lastProducts
+        }),
       });
 
       const data = await response.json();
@@ -64,9 +70,15 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
 
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // Actualizar productos en el área de contenido
+      // Si es add_to_cart, agregar producto al carrito
+      if (data.intent === 'add_to_cart' && data.productToAdd) {
+        addToCart(data.productToAdd);
+      }
+
+      // Actualizar productos en el área de contenido y guardar en contexto
       if (data.products && data.products.length > 0) {
         onProductsFound(data.products);
+        setLastProducts(data.products);
       }
     } catch (error) {
       console.error('Error enviando mensaje:', error);

@@ -2,6 +2,7 @@
 
 import { MLProduct } from '@/types';
 import Image from 'next/image';
+import Link from 'next/link';
 import { ShoppingCart, Truck } from 'lucide-react';
 
 interface ProductCardProps {
@@ -21,10 +22,8 @@ export default function ProductCard({ product }: ProductCardProps) {
     : 0;
 
   return (
-    <a
-      href={product.permalink}
-      target="_blank"
-      rel="noopener noreferrer"
+    <Link
+      href={`/product/${product.id}`}
       className="group block bg-white rounded-lg border border-gray-200 hover:border-primary-500 hover:shadow-lg transition-all duration-200"
     >
       <div className="relative aspect-square overflow-hidden rounded-t-lg bg-gray-100">
@@ -74,6 +73,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           </button>
         </div>
       </div>
-    </a>
+    </Link>
   );
 }

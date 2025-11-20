@@ -1,23 +1,47 @@
 import axios from 'axios';
 import { MLProduct, MLSearchResponse, MLCategory } from '@/types';
+import { searchMockProducts, getFeaturedMockProducts } from '@/mock-data/products';
 
 const ML_API_URL = process.env.NEXT_PUBLIC_ML_API_URL || 'https://api.mercadolibre.com';
 const ML_SITE_ID = 'MLM'; // México
+const API_MODE = process.env.NEXT_PUBLIC_API_MODE || 'REAL'; // REAL o SIMULADO
 
 export class MercadoLibreService {
   private apiUrl: string;
   private siteId: string;
+  private mode: string;
 
   constructor() {
     this.apiUrl = ML_API_URL;
     this.siteId = ML_SITE_ID;
+    this.mode = API_MODE;
+
+    console.log(`🔧 Mercado Libre Service iniciado en modo: ${this.mode}`);
   }
 
   /**
    * Buscar productos por término
    */
   async searchProducts(query: string, limit: number = 20, offset: number = 0): Promise<MLSearchResponse> {
+    // Modo SIMULADO: usar datos mock
+    if (this.mode === 'SIMULADO') {
+      console.log(`🎭 Modo SIMULADO: Buscando "${query}" en datos locales`);
+      const results = searchMockProducts(query, limit);
+      return {
+        site_id: this.siteId,
+        query: query,
+        results,
+        paging: {
+          total: results.length,
+          offset,
+          limit,
+        },
+      };
+    }
+
+    // Modo REAL: usar API de Mercado Libre
     try {
+      console.log(`🌐 Modo REAL: Buscando "${query}" en Mercado Libre API`);
       const response = await axios.get(`${this.apiUrl}/sites/${this.siteId}/search`, {
         params: {
           q: query,
@@ -33,7 +57,7 @@ export class MercadoLibreService {
       });
       return response.data;
     } catch (error: any) {
-      console.error('Error buscando productos:', error?.response?.status, error?.message);
+      console.error('❌ Error buscando productos en API real:', error?.response?.status, error?.message);
       // Retornar estructura vacía en caso de error
       return {
         site_id: this.siteId,
@@ -52,8 +76,15 @@ export class MercadoLibreService {
    * Obtener productos destacados (ofertas del día)
    */
   async getFeaturedProducts(): Promise<MLProduct[]> {
+    // Modo SIMULADO: usar datos mock
+    if (this.mode === 'SIMULADO') {
+      console.log('🎭 Modo SIMULADO: Obteniendo productos destacados de datos locales');
+      return getFeaturedMockProducts(12);
+    }
+
+    // Modo REAL: usar API de Mercado Libre
     try {
-      // Buscar productos populares - búsqueda simple sin filtros especiales
+      console.log('🌐 Modo REAL: Obteniendo productos destacados de Mercado Libre API');
       const response = await axios.get(`${this.apiUrl}/sites/${this.siteId}/search`, {
         params: {
           q: 'electronica',
@@ -68,7 +99,7 @@ export class MercadoLibreService {
       });
       return response.data.results || [];
     } catch (error: any) {
-      console.error('Error obteniendo productos destacados:', error?.response?.status, error?.message);
+      console.error('❌ Error obteniendo productos destacados de API real:', error?.response?.status, error?.message);
       // Retornar array vacío en lugar de lanzar error
       return [];
     }
@@ -77,13 +108,22 @@ export class MercadoLibreService {
   /**
    * Obtener detalles de un producto
    */
-  async getProductById(productId: string): Promise<MLProduct> {
+  async getProductById(productId: string): Promise<MLProduct | null> {
+    // Modo SIMULADO: buscar en datos mock
+    if (this.mode === 'SIMULADO') {
+      console.log(`🎭 Modo SIMULADO: Buscando producto ${productId} en datos locales`);
+      const allProducts = getFeaturedMockProducts(100);
+      const product = allProducts.find(p => p.id === productId);
+      return product || null;
+    }
+
+    // Modo REAL: usar API de Mercado Libre
     try {
       const response = await axios.get(`${this.apiUrl}/items/${productId}`);
       return response.data;
     } catch (error) {
       console.error('Error obteniendo producto:', error);
-      throw error;
+      return null;
     }
   }
 
@@ -91,12 +131,22 @@ export class MercadoLibreService {
    * Obtener categorías
    */
   async getCategories(): Promise<MLCategory[]> {
+    // Modo SIMULADO: categorías mock
+    if (this.mode === 'SIMULADO') {
+      return [
+        { id: 'MLM1051', name: 'Celulares y Teléfonos' },
+        { id: 'MLM1000', name: 'Electrónica, Audio y Video' },
+        { id: 'MLM1144', name: 'Consolas y Videojuegos' },
+      ];
+    }
+
+    // Modo REAL: usar API de Mercado Libre
     try {
       const response = await axios.get(`${this.apiUrl}/sites/${this.siteId}/categories`);
       return response.data;
     } catch (error) {
       console.error('Error obteniendo categorías:', error);
-      throw error;
+      return [];
     }
   }
 
@@ -104,6 +154,13 @@ export class MercadoLibreService {
    * Buscar productos por categoría
    */
   async searchByCategory(categoryId: string, limit: number = 20): Promise<MLProduct[]> {
+    // Modo SIMULADO: filtrar por categoría en datos mock
+    if (this.mode === 'SIMULADO') {
+      // Por ahora retornamos productos aleatorios
+      return getFeaturedMockProducts(limit);
+    }
+
+    // Modo REAL: usar API de Mercado Libre
     try {
       const response = await axios.get(`${this.apiUrl}/sites/${this.siteId}/search`, {
         params: {
@@ -114,7 +171,7 @@ export class MercadoLibreService {
       return response.data.results;
     } catch (error) {
       console.error('Error buscando por categoría:', error);
-      throw error;
+      return [];
     }
   }
 }

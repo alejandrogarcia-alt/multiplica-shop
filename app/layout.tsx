@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CartProvider } from "@/contexts/CartContext";
 
 export const metadata: Metadata = {
   title: "Multiplica Shop - Tu asistente de compras inteligente",
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="es" className="h-full">
       <body className="antialiased h-full m-0 p-0">
-        {children}
+        <CartProvider>
+          {children}
+        </CartProvider>
       </body>
     </html>
   );
