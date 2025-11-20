@@ -92,7 +92,10 @@ Ejemplos:
       contents: prompt
     });
 
-    const text = response.text;
+    let text = response.text;
+    
+    if(!text) text = "";
+    
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const result = JSON.parse(jsonMatch[0]);
@@ -219,7 +222,11 @@ NO incluyas listas de productos, solo texto conversacional.`;
       model: modelName,
       contents: prompt
     });
-    const text = response.text;
+  
+    let text = response.text;
+    
+    if(!text) text = "";
+
     console.log('✅ Gemini respuesta generada');
     return text;
   } catch (error) {
@@ -256,7 +263,10 @@ Responde SOLO con un array JSON de strings:
       contents: prompt
     });
 
-    const text = response.text;
+    let text = response.text;
+    
+    if(!text) text = "";
+
 
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
