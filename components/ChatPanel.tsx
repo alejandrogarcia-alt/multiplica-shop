@@ -1,15 +1,20 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Send, Bot, User } from 'lucide-react';
-import { Message, MLProduct } from '@/types';
+import { Message, MLProduct, SearchFilters as SearchFiltersType } from '@/types';
 import { useCart } from '@/contexts/CartContext';
+import ComparisonTable from './chat/ComparisonTable';
+import SearchFilters from './chat/SearchFilters';
+import ProductSuggestions from './chat/ProductSuggestions';
 
 interface ChatPanelProps {
   onProductsFound: (products: MLProduct[]) => void;
 }
 
 export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
+  const router = useRouter();
   const { addToCart } = useCart();
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -31,6 +36,59 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Función para búsqueda silenciosa con filtros
+  const handleSilentSearch = async (filters: SearchFiltersType) => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: `búsqueda filtrada`, // Mensaje genérico, el backend usará los filtros
+          lastProducts: lastProducts,
+          filters: filters
+        }),
+      });
+
+      const data = await response.json();
+
+      // Actualizar el último mensaje que tenga filtros (el panel de filtros)
+      setMessages((prev) => {
+        const lastIndex = prev.length - 1;
+        const lastMsg = prev[lastIndex];
+
+        // Si el último mensaje tiene availableFilters, actualizarlo
+        if (lastMsg && lastMsg.availableFilters) {
+          const updated = [...prev];
+          updated[lastIndex] = {
+            ...lastMsg,
+            products: data.products,
+            activeFilters: filters,
+            availableFilters: data.availableFilters || lastMsg.availableFilters, // Actualizar disponibles si cambian
+            content: lastMsg.content,
+          };
+          return updated;
+        }
+        return prev;
+      });
+
+      // Actualizar productos en el área de contenido
+      if (data.products && data.products.length > 0) {
+        onProductsFound(data.products);
+        setLastProducts(data.products);
+      }
+    } catch (error) {
+      console.error('Error en búsqueda silenciosa:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -66,26 +124,37 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
         content: data.response,
         timestamp: new Date(),
         products: data.products,
+        comparisonProducts: data.comparisonProducts,
+        geminiInsights: data.geminiInsights,
+        priceRange: data.priceRange,
+        availableFilters: data.availableFilters,
+        activeFilters: data.activeFilters
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // Si es add_to_cart, agregar producto al carrito
-      if (data.intent === 'add_to_cart' && data.productToAdd) {
-        addToCart(data.productToAdd);
-      }
-
-      // Actualizar productos en el área de contenido y guardar en contexto
+      // Si hay productos, actualizar el grid principal
       if (data.products && data.products.length > 0) {
         onProductsFound(data.products);
         setLastProducts(data.products);
       }
+
+      // Si hay intent de add_to_cart
+      if (data.intent === 'add_to_cart' && data.productToAdd) {
+        addToCart(data.productToAdd);
+      }
+
+      // Si hay intent de view_details
+      if (data.intent === 'view_details' && data.productId) {
+        router.push(`/product/${data.productId}`);
+      }
+
     } catch (error) {
-      console.error('Error enviando mensaje:', error);
+      console.error('Error sending message:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Lo siento, hubo un error procesando tu mensaje. Por favor intenta de nuevo.',
+        content: 'Lo siento, tuve un problema procesando tu mensaje. Por favor intenta de nuevo.',
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -116,16 +185,14 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex gap-3 ${
-              message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-            }`}
+            className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+              }`}
           >
             <div
-              className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                message.role === 'user'
-                  ? 'bg-secondary-500'
-                  : 'bg-primary-500'
-              }`}
+              className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${message.role === 'user'
+                ? 'bg-secondary-500'
+                : 'bg-primary-500'
+                }`}
             >
               {message.role === 'user' ? (
                 <User className="w-5 h-5 text-white" />
@@ -134,17 +201,39 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
               )}
             </div>
             <div
-              className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                message.role === 'user'
-                  ? 'bg-secondary-100 text-secondary-900'
-                  : 'bg-gray-100 text-gray-900'
-              }`}
+              className={`max-w-[90%] rounded-lg px-4 py-2 ${message.role === 'user'
+                ? 'bg-secondary-100 text-secondary-900'
+                : 'bg-gray-100 text-gray-900'
+                }`}
             >
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              {message.products && message.products.length > 0 && (
-                <p className="text-xs mt-2 text-gray-600">
-                  {message.products.length} productos encontrados
-                </p>
+
+              {/* Tabla de comparación visual */}
+              {message.comparisonProducts && message.comparisonProducts.length > 0 && (
+                <div className="mt-3">
+                  <ComparisonTable
+                    products={message.comparisonProducts}
+                    geminiInsights={message.geminiInsights}
+                  />
+                </div>
+              )}
+
+              {/* Search Filters (replaces PriceRangeSlider) */}
+              {message.availableFilters && (
+                <div className="mt-3">
+                  <SearchFilters
+                    availableFilters={message.availableFilters}
+                    activeFilters={message.activeFilters}
+                    onFiltersChange={handleSilentSearch}
+                  />
+                </div>
+              )}
+
+              {/* Product Suggestions (Cross-selling) */}
+              {message.suggestedProducts && message.suggestedProducts.length > 0 && (
+                <div className="mt-3">
+                  <ProductSuggestions products={message.suggestedProducts} />
+                </div>
               )}
             </div>
           </div>
@@ -173,7 +262,7 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Escribe lo que buscas..."
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             disabled={isLoading}

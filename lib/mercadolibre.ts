@@ -22,11 +22,11 @@ export class MercadoLibreService {
   /**
    * Buscar productos por término
    */
-  async searchProducts(query: string, limit: number = 20, offset: number = 0): Promise<MLSearchResponse> {
+  async searchProducts(query: string, limit: number = 20, offset: number = 0, filters?: any): Promise<MLSearchResponse> {
     // Modo SIMULADO: usar datos mock
     if (this.mode === 'SIMULADO') {
-      console.log(`🎭 Modo SIMULADO: Buscando "${query}" en datos locales`);
-      const results = searchMockProducts(query, limit);
+      console.log(`🎭 Modo SIMULADO: Buscando "${query}" en datos locales con filtros:`, filters);
+      const results = searchMockProducts(query, limit, filters);
       return {
         site_id: this.siteId,
         query: query,
@@ -42,12 +42,22 @@ export class MercadoLibreService {
     // Modo REAL: usar API de Mercado Libre
     try {
       console.log(`🌐 Modo REAL: Buscando "${query}" en Mercado Libre API`);
+      const params: any = {
+        q: query,
+        limit,
+        offset,
+      };
+
+      // Agregar filtros de precio si existen
+      if (filters?.price?.min) params.price_min = filters.price.min;
+      if (filters?.price?.max) params.price_max = filters.price.max;
+
+      // Nota: La API de ML tiene filtros específicos (BRAND, RAM, etc) que se pasan diferente
+      // Por ahora en modo REAL solo implementamos precio, ya que los IDs de filtro son complejos
+      // Para una implementación completa se requeriría mapear los IDs de filtro de ML
+
       const response = await axios.get(`${this.apiUrl}/sites/${this.siteId}/search`, {
-        params: {
-          q: query,
-          limit,
-          offset,
-        },
+        params,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
           'Accept': 'application/json',
@@ -171,6 +181,28 @@ export class MercadoLibreService {
       return response.data.results;
     } catch (error) {
       console.error('Error buscando por categoría:', error);
+      return [];
+    }
+  }
+  /**
+   * Obtener múltiples productos por ID
+   */
+  async getProductsByIds(ids: string[]): Promise<MLProduct[]> {
+    if (!ids || ids.length === 0) return [];
+
+    // Modo SIMULADO: buscar en datos mock
+    if (this.mode === 'SIMULADO') {
+      const allProducts = getFeaturedMockProducts(100);
+      return allProducts.filter(p => ids.includes(p.id));
+    }
+
+    // Modo REAL: usar API de Mercado Libre
+    try {
+      const promises = ids.map(id => this.getProductById(id));
+      const results = await Promise.all(promises);
+      return results.filter((p): p is MLProduct => p !== null);
+    } catch (error) {
+      console.error('Error obteniendo productos por IDs:', error);
       return [];
     }
   }

@@ -41,26 +41,14 @@ export default function Home() {
       <Header />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Chat Panel - 1/4 de la pantalla */}
-        <div className="w-1/4 min-w-[300px] max-w-[400px]">
+        {/* Chat Panel - 30% de la pantalla */}
+        <div className="w-[30%] min-w-[400px] max-w-[500px]">
           <ChatPanel onProductsFound={handleProductsFound} />
         </div>
 
-        {/* Content Area - 3/4 de la pantalla */}
+        {/* Content Area - 70% de la pantalla */}
         <div className="flex-1 overflow-y-auto bg-gray-50">
           <div className="max-w-7xl mx-auto p-6">
-            {/* Banner informativo */}
-            <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg p-6 mb-8 text-white">
-              <div className="flex items-center gap-3 mb-2">
-                <Sparkles className="w-6 h-6" />
-                <h2 className="text-2xl font-bold">Compra con Inteligencia Artificial</h2>
-              </div>
-              <p className="text-primary-50">
-                Usa el chat para decirle a nuestro asistente qué necesitas y te ayudaremos a encontrar
-                los mejores productos al mejor precio.
-              </p>
-            </div>
-
             {/* Grid de productos */}
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
