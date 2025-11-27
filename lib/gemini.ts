@@ -92,6 +92,11 @@ Ejemplos:
 - "celulares entre 10000 y 20000" → {"intent": "search", "searchQuery": "celular", "priceRange": {"min": 10000, "max": 20000}}
 - "teléfonos negros" → {"intent": "search", "searchQuery": "teléfono negro"}
 - "menos de 15000 pesos" → {"intent": "search", "searchQuery": "celular", "priceRange": {"max": 15000}}
+- "menor a 15000" → {"intent": "search", "searchQuery": "celular", "priceRange": {"max": 15000}}
+- "más de 10000" → {"intent": "search", "searchQuery": "celular", "priceRange": {"min": 10000}}
+- "desde 10000 hasta 20000" → {"intent": "search", "searchQuery": "celular", "priceRange": {"min": 10000, "max": 20000}}
+- "entre 5000 y 10000 pesos" → {"intent": "search", "searchQuery": "celular", "priceRange": {"min": 5000, "max": 10000}}
+- "precio máximo 15000" → {"intent": "search", "searchQuery": "celular", "priceRange": {"max": 15000}}
 - "recomiéndame un celular para gaming" → {"intent": "recommendation", "searchQuery": "celular gaming"}
 - "qué me conviene para fotografía" → {"intent": "recommendation", "searchQuery": "celular fotografía"}
 - "quiero ver el detalle del primero" → {"intent": "view_details", "productIndex": 0}
@@ -248,28 +253,40 @@ Ejemplos:
   // Detectar búsqueda por rango de precios
   let priceRange: { min?: number; max?: number } | undefined;
 
-  // Normalizar "mil" y "k" a números
+  // Normalizar "mil", "k" y separadores de miles a números
   const normalizedMessage = userMessage
-    .replace(/(\d+)\s*mil/gi, (match, num) => String(parseInt(num) * 1000))
-    .replace(/(\d+)\s*k/gi, (match, num) => String(parseInt(num) * 1000));
+    .replace(/(\d+),(\d{3})/g, '$1$2') // Eliminar comas de miles: 15,000 → 15000
+    .replace(/(\d+)\s*mil/gi, (match, num) => String(parseInt(num) * 1000)) // 15 mil → 15000
+    .replace(/(\d+)k/gi, (match, num) => String(parseInt(num) * 1000)); // 15k → 15000
 
-  // Detectar "entre X y Y"
-  const rangeMatch = normalizedMessage.match(/entre\s+(\d+)\s*(?:y|a)\s*(\d+)/i);
-  if (rangeMatch) {
-    priceRange = {
-      min: parseInt(rangeMatch[1]),
-      max: parseInt(rangeMatch[2])
-    };
-    console.log('🔍 Fallback - Rango de precio detectado:', priceRange);
+  // Detectar "entre X y Y" o "desde X hasta Y"
+  const rangePatterns = [
+    /entre\s+(\d+)\s*(?:y|a)\s*(\d+)/i,
+    /desde\s+(\d+)\s*(?:hasta|a)\s*(\d+)/i,
+    /de\s+(\d+)\s*(?:a|hasta)\s*(\d+)/i
+  ];
+
+  for (const pattern of rangePatterns) {
+    const rangeMatch = normalizedMessage.match(pattern);
+    if (rangeMatch) {
+      priceRange = {
+        min: parseInt(rangeMatch[1]),
+        max: parseInt(rangeMatch[2])
+      };
+      console.log('🔍 Fallback - Rango de precio detectado:', priceRange);
+      break;
+    }
   }
 
-  // Detectar "menos de X" o "hasta X" o "máximo X"
+  // Detectar "menos de X", "menor a X", "hasta X", "máximo X"
   if (!priceRange) {
     const maxPricePatterns = [
       /menos\s+de\s+(\d+)/i,
+      /menor\s+(?:a|de|que)\s+(\d+)/i,
       /hasta\s+(\d+)/i,
       /máximo\s+(\d+)/i,
       /no\s+más\s+de\s+(\d+)/i,
+      /precio\s+(?:máximo|max)\s+(\d+)/i,
     ];
 
     for (const pattern of maxPricePatterns) {
@@ -282,14 +299,16 @@ Ejemplos:
     }
   }
 
-  // Detectar "más de X" o "desde X" o "mínimo X"
+  // Detectar "más de X", "mayor a X", "desde X", "mínimo X"
   if (!priceRange) {
     const minPricePatterns = [
       /más\s+de\s+(\d+)/i,
-      /desde\s+(\d+)/i,
+      /mayor\s+(?:a|de|que)\s+(\d+)/i,
+      /desde\s+(\d+)(?!\s*(?:hasta|a))/i, // Desde X pero NO "desde X hasta Y"
       /a\s+partir\s+de\s+(\d+)/i,
       /mínimo\s+(\d+)/i,
       /arriba\s+de\s+(\d+)/i,
+      /precio\s+(?:mínimo|min)\s+(\d+)/i,
     ];
 
     for (const pattern of minPricePatterns) {
@@ -460,12 +479,20 @@ Extrae la siguiente información estructurada (si se menciona):
 - ram: Array de memoria RAM mencionada (ej: ["8GB", "12GB"]). Normaliza formato.
 - storage: Array de almacenamiento mencionado (ej: ["256GB", "512GB"]). Normaliza formato.
 - colors: Array de colores mencionados (ej: ["Negro", "Azul", "Titanio"]). Normaliza a Capital Case.
-- price: Objeto con min y/o max si se menciona rango de precio.
+- price: Objeto con min y/o max si se menciona rango de precio. IMPORTANTE: Extrae SIEMPRE los precios mencionados.
 
 Reglas:
 - Si no se menciona un atributo, devuélvelo como null o undefined.
 - Sé preciso. Si dice "Samsung de 8GB", brands=["Samsung"] y ram=["8GB"].
-- Si dice "barato" o "económico" sin precio, ignora el precio (o usa un rango bajo por defecto si prefieres, pero mejor null).
+- IMPORTANTE: Para precios, detecta todas estas variaciones:
+  * "menos de 15000" → {"max": 15000}
+  * "menor a 15000" → {"max": 15000}
+  * "más de 10000" → {"min": 10000}
+  * "mayor a 10000" → {"min": 10000}
+  * "entre 10000 y 20000" → {"min": 10000, "max": 20000}
+  * "desde 10000 hasta 20000" → {"min": 10000, "max": 20000}
+  * "precio máximo 15000" → {"max": 15000}
+- Si dice "barato" o "económico" sin precio exacto, usa {"max": 10000}.
 - Si dice "celulares", no es un filtro, es la categoría.
 
 Responde SOLO con un JSON válido:
@@ -475,7 +502,13 @@ Responde SOLO con un JSON válido:
   "storage": ["256GB"] | null,
   "colors": ["Negro"] | null,
   "price": { "min": 1000, "max": 5000 } | null
-}`;
+}
+
+Ejemplos:
+- "menos de 15000 pesos" → {"price": {"max": 15000}}
+- "entre 10000 y 20000" → {"price": {"min": 10000, "max": 20000}}
+- "más de 20000" → {"price": {"min": 20000}}
+- "Samsung de 8GB y menos de 15000" → {"brands": ["Samsung"], "ram": ["8GB"], "price": {"max": 15000}}`;
 
   try {
     console.log('🤖 Extrayendo filtros con Gemini...');

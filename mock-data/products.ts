@@ -1037,9 +1037,22 @@ export function searchMockProducts(query: string, limit: number = 20, filters?: 
       // Buscar término en el título si no es solo una búsqueda de filtros puros
       // Si query es vacío o es una búsqueda de precio, ignorar texto
       if (query && !query.match(/entre|menos|más|pesos/i)) {
+        // Palabras genéricas que deben ignorarse (son categorías, no búsquedas específicas)
+        const genericWords = ['celular', 'celulares', 'teléfono', 'teléfonos', 'telefono', 'telefonos', 'smartphone', 'smartphones', 'móvil', 'móviles', 'movil', 'moviles'];
+
+        // Si el query es solo una palabra genérica, ignorar este filtro (mostrar todos)
+        if (genericWords.includes(lowerQuery.trim())) {
+          return true;
+        }
+
         // Lógica de búsqueda por palabras clave (reutilizada)
         // Ignorar palabras comunes de conexión como "de", "con", "el", "la"
-        const queryWords = lowerQuery.split(' ').filter(word => word.length > 2 && !['con', 'del', 'los', 'las', 'para'].includes(word));
+        const queryWords = lowerQuery.split(' ').filter(word => word.length > 2 && !['con', 'del', 'los', 'las', 'para'].includes(word) && !genericWords.includes(word));
+
+        // Si después de filtrar no quedan palabras, mostrar todos
+        if (queryWords.length === 0) {
+          return true;
+        }
 
         if (queryWords.length <= 1) {
           return product.title.toLowerCase().includes(lowerQuery);

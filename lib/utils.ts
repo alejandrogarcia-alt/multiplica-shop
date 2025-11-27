@@ -11,18 +11,31 @@ export function extractFiltersFromProducts(products: MLProduct[]): SearchFilters
     const maxPrice = Math.max(...prices);
 
     // Extract brands
-    // Assuming brand is part of the title or we can infer it. 
+    // Assuming brand is part of the title or we can infer it.
     // For better accuracy, we should have a brand field, but for now we'll extract from title
-    // Common brands list to check against
-    const commonBrands = ['Apple', 'Samsung', 'Xiaomi', 'Motorola', 'Google', 'OnePlus', 'Nothing', 'Huawei', 'Honor', 'Oppo', 'Realme', 'Vivo'];
+    // Common brands list to check against with aliases
+    const brandMapping: { [key: string]: string[] } = {
+        'Apple': ['apple', 'iphone'],
+        'Samsung': ['samsung', 'galaxy'],
+        'Xiaomi': ['xiaomi', 'redmi', 'poco'],
+        'Motorola': ['motorola', 'moto'],
+        'Google': ['google', 'pixel'],
+        'OnePlus': ['oneplus', 'one plus'],
+        'Nothing': ['nothing'],
+        'Huawei': ['huawei'],
+        'Honor': ['honor'],
+        'Oppo': ['oppo'],
+        'Realme': ['realme'],
+        'Vivo': ['vivo']
+    };
 
     const brands = new Set<string>();
     products.forEach(p => {
         const title = p.title.toLowerCase();
-        for (const brand of commonBrands) {
-            if (title.includes(brand.toLowerCase())) {
-                brands.add(brand);
-                break;
+        for (const [brandName, aliases] of Object.entries(brandMapping)) {
+            if (aliases.some(alias => title.includes(alias))) {
+                brands.add(brandName);
+                break; // Una vez que encontramos la marca, no seguir buscando
             }
         }
     });

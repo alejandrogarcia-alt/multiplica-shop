@@ -223,11 +223,30 @@ export async function POST(request: NextRequest) {
         // Por ejemplo, si ya hay storage:["256GB"] activo, y el usuario dice "el negro",
         // entonces queremos storage:["256GB"] + cualquier filtro de color extraído del mensaje
 
+        // Combinar precio: Si el mensaje menciona precio, reemplazar el anterior
+        // Si no menciona precio, mantener el filtro anterior de la UI
+        const combinedPrice: { min?: number; max?: number } = {};
+        const hasPriceInMessage = aiFilters?.price || analysis.priceRange;
+
+        if (hasPriceInMessage) {
+          // El mensaje menciona precio → usar SOLO el precio del mensaje (reemplazar anterior)
+          if (aiFilters?.price?.min || analysis.priceRange?.min) {
+            combinedPrice.min = aiFilters?.price?.min || analysis.priceRange?.min;
+          }
+          if (aiFilters?.price?.max || analysis.priceRange?.max) {
+            combinedPrice.max = aiFilters?.price?.max || analysis.priceRange?.max;
+          }
+        } else {
+          // El mensaje NO menciona precio → mantener filtro anterior de la UI
+          if (filters?.price?.min) combinedPrice.min = filters.price.min;
+          if (filters?.price?.max) combinedPrice.max = filters.price.max;
+        }
+
         searchFilters = {
           // Empezar con filtros activos
           ...(filters || {}),
-          // Agregar filtros extraídos de AI, sin sobrescribir los activos
-          price: filters?.price || aiFilters?.price || analysis.priceRange,
+          // Agregar precio combinado
+          ...(Object.keys(combinedPrice).length > 0 && { price: combinedPrice }),
           // Para arrays (brands, ram, storage), combinar en lugar de reemplazar
           brands: [...(filters?.brands || []), ...(aiFilters?.brands || [])].filter((v, i, a) => a.indexOf(v) === i),
           ram: [...(filters?.ram || []), ...(aiFilters?.ram || [])].filter((v, i, a) => a.indexOf(v) === i),
