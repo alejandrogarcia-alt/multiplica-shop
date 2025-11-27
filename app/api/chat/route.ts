@@ -186,21 +186,34 @@ export async function POST(request: NextRequest) {
     // 7. Búsqueda / Recomendación / Other (Fallback inteligente)
     if (analysis.intent === 'search' || analysis.intent === 'recommendation' || analysis.intent === 'other') {
       let searchResults;
-      let searchFilters = { ...filters };
+      let searchFilters = { ...filters }; // Iniciar con filtros manuales/activos
 
-      // Solo usar AI para extraer filtros si NO hay filtros manuales explícitos
-      if (!filters || Object.keys(filters).length === 0 || message !== 'búsqueda filtrada') {
+      // Solo usar AI para extraer filtros si el mensaje NO es el genérico de "búsqueda filtrada"
+      const shouldExtractWithAI = message !== 'búsqueda filtrada';
+
+      if (shouldExtractWithAI) {
         const { extractSearchFilters } = await import('@/lib/gemini');
         const aiFilters = await extractSearchFilters(message);
 
-        // Combinar filtros, pero solo incluir price si tiene valores válidos
-        const priceFilter = filters?.price || aiFilters?.price || analysis.priceRange;
+        // COMBINAR filtros: Los filtros activos tienen prioridad, pero se pueden AGREGAR nuevos filtros del mensaje
+        // Por ejemplo, si ya hay storage:["256GB"] activo, y el usuario dice "el negro",
+        // entonces queremos storage:["256GB"] + cualquier filtro de color extraído del mensaje
 
         searchFilters = {
-          ...aiFilters,
-          ...filters,
-          ...(priceFilter && { price: priceFilter }) // Solo incluir si existe
+          // Empezar con filtros activos
+          ...(filters || {}),
+          // Agregar filtros extraídos de AI, sin sobrescribir los activos
+          price: filters?.price || aiFilters?.price || analysis.priceRange,
+          // Para arrays (brands, ram, storage), combinar en lugar de reemplazar
+          brands: [...(filters?.brands || []), ...(aiFilters?.brands || [])].filter((v, i, a) => a.indexOf(v) === i),
+          ram: [...(filters?.ram || []), ...(aiFilters?.ram || [])].filter((v, i, a) => a.indexOf(v) === i),
+          storage: [...(filters?.storage || []), ...(aiFilters?.storage || [])].filter((v, i, a) => a.indexOf(v) === i),
         };
+
+        // Limpiar arrays vacíos
+        if (searchFilters.brands?.length === 0) delete searchFilters.brands;
+        if (searchFilters.ram?.length === 0) delete searchFilters.ram;
+        if (searchFilters.storage?.length === 0) delete searchFilters.storage;
       }
 
       console.log('🔍 Filtros activos:', searchFilters);

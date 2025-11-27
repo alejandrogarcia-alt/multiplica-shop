@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SearchFilters as SearchFiltersType } from '@/types';
 import { Filter, X } from 'lucide-react';
 
@@ -28,6 +28,9 @@ export default function SearchFilters({
 
     const [isAdjustingPrice, setIsAdjustingPrice] = useState(false);
 
+    // Debounce timer for price changes
+    const priceDebounceTimer = useRef<NodeJS.Timeout | null>(null);
+
     // Update local state when props change
     useEffect(() => {
         if (availableFilters.price) {
@@ -43,6 +46,15 @@ export default function SearchFilters({
             }
         }
     }, [availableFilters.price, activeFilters?.price]);
+
+    // Cleanup debounce timer on unmount
+    useEffect(() => {
+        return () => {
+            if (priceDebounceTimer.current) {
+                clearTimeout(priceDebounceTimer.current);
+            }
+        };
+    }, []);
 
     // Helper to trigger update
     const triggerUpdate = (
@@ -71,9 +83,27 @@ export default function SearchFilters({
 
         setPriceRange(newRange);
         setIsAdjustingPrice(true);
+
+        // Clear existing timer
+        if (priceDebounceTimer.current) {
+            clearTimeout(priceDebounceTimer.current);
+        }
+
+        // Set new timer to trigger update after 500ms of inactivity
+        priceDebounceTimer.current = setTimeout(() => {
+            triggerUpdate(newRange);
+            setIsAdjustingPrice(false);
+        }, 500);
     };
 
     const handlePriceCommit = () => {
+        // Clear debounce timer if exists
+        if (priceDebounceTimer.current) {
+            clearTimeout(priceDebounceTimer.current);
+            priceDebounceTimer.current = null;
+        }
+
+        // Immediately trigger update if was adjusting
         if (isAdjustingPrice) {
             setIsAdjustingPrice(false);
             triggerUpdate(priceRange);

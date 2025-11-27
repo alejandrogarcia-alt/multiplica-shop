@@ -15,7 +15,7 @@ interface ChatPanelProps {
 
 export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, openCartTemporarily } = useCart();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -27,6 +27,7 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastProducts, setLastProducts] = useState<MLProduct[]>([]);
+  const [activeFilters, setActiveFilters] = useState<SearchFiltersType | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -42,6 +43,7 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
     if (isLoading) return;
 
     setIsLoading(true);
+    setActiveFilters(filters); // Guardar filtros activos
 
     try {
       const response = await fetch('/api/chat', {
@@ -112,7 +114,8 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
         },
         body: JSON.stringify({
           message: input,
-          lastProducts: lastProducts
+          lastProducts: lastProducts,
+          filters: activeFilters // Enviar filtros activos para mantener contexto
         }),
       });
 
@@ -133,6 +136,11 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
 
       setMessages((prev) => [...prev, assistantMessage]);
 
+      // Actualizar activeFilters si cambió
+      if (data.activeFilters) {
+        setActiveFilters(data.activeFilters);
+      }
+
       // Si hay productos, actualizar el grid principal
       if (data.products && data.products.length > 0) {
         onProductsFound(data.products);
@@ -142,6 +150,7 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
       // Si hay intent de add_to_cart
       if (data.intent === 'add_to_cart' && data.productToAdd) {
         addToCart(data.productToAdd);
+        openCartTemporarily(); // Auto-abrir carrito por 3 segundos
       }
 
       // Si hay intent de view_details

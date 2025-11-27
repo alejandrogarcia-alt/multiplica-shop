@@ -133,6 +133,92 @@ export const mockProducts: MLProduct[] = [
     relatedProducts: ['ACC004', 'ACC002']
   },
   {
+    id: 'MLM002-256-negro',
+    title: 'iPhone 15 256GB Negro',
+    price: 23999,
+    currency_id: 'MXN',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15.jpg',
+    condition: 'new',
+    permalink: 'https://www.mercadolibre.com.mx/iphone-15',
+    seller: {
+      id: 123456,
+      nickname: 'Apple Store Oficial',
+    },
+    shipping: {
+      free_shipping: true,
+    },
+    original_price: 25999,
+    available_quantity: 40,
+    sold_quantity: 150,
+    specs: {
+      ram: '6GB',
+      storage: '256GB',
+      processor: 'A16 Bionic',
+      screen: {
+        size: '6.1"',
+        type: 'Super Retina XDR OLED',
+        refresh: 60
+      },
+      camera: {
+        main: '48MP',
+        ultrawide: '12MP',
+        front: '12MP TrueDepth'
+      },
+      battery: {
+        capacity: '3349mAh',
+        charging: '20W rápida, 15W MagSafe'
+      },
+      connectivity: ['5G', 'WiFi 6', 'NFC', 'Bluetooth 5.3', 'USB-C'],
+      os: 'iOS 17',
+      weight: 171,
+      waterResistance: 'IP68'
+    },
+    relatedProducts: ['ACC004', 'ACC002']
+  },
+  {
+    id: 'MLM002-256-morado',
+    title: 'iPhone 15 256GB Morado',
+    price: 23999,
+    currency_id: 'MXN',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15.jpg',
+    condition: 'new',
+    permalink: 'https://www.mercadolibre.com.mx/iphone-15',
+    seller: {
+      id: 123456,
+      nickname: 'Apple Store Oficial',
+    },
+    shipping: {
+      free_shipping: true,
+    },
+    original_price: 25999,
+    available_quantity: 35,
+    sold_quantity: 110,
+    specs: {
+      ram: '6GB',
+      storage: '256GB',
+      processor: 'A16 Bionic',
+      screen: {
+        size: '6.1"',
+        type: 'Super Retina XDR OLED',
+        refresh: 60
+      },
+      camera: {
+        main: '48MP',
+        ultrawide: '12MP',
+        front: '12MP TrueDepth'
+      },
+      battery: {
+        capacity: '3349mAh',
+        charging: '20W rápida, 15W MagSafe'
+      },
+      connectivity: ['5G', 'WiFi 6', 'NFC', 'Bluetooth 5.3', 'USB-C'],
+      os: 'iOS 17',
+      weight: 171,
+      waterResistance: 'IP68'
+    },
+    relatedProducts: ['ACC004', 'ACC002']
+  },
+  {
     id: 'MLM003',
     title: 'iPhone 14 Plus 256GB Morado',
     price: 18499,

@@ -15,12 +15,16 @@ interface CartContextType {
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+  isCartOpen: boolean;
+  setIsCartOpen: (open: boolean) => void;
+  openCartTemporarily: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const addToCart = (product: MLProduct) => {
     setCart(prevCart => {
@@ -64,6 +68,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
+  const openCartTemporarily = () => {
+    setIsCartOpen(true);
+    setTimeout(() => {
+      setIsCartOpen(false);
+    }, 3000);
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -74,6 +85,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         getTotalItems,
         getTotalPrice,
+        isCartOpen,
+        setIsCartOpen,
+        openCartTemporarily,
       }}
     >
       {children}
