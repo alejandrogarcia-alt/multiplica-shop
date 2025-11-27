@@ -965,7 +965,7 @@ export const mockProducts: MLProduct[] = [
 
 // Función para buscar productos por término
 export function searchMockProducts(query: string, limit: number = 20, filters?: any): MLProduct[] {
-  const lowerQuery = query.toLowerCase();
+  const lowerQuery = (query || '').toLowerCase();
 
   //  Si se proporcionan filtros, usarlos
   if (filters) {

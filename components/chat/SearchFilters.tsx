@@ -63,13 +63,26 @@ export default function SearchFilters({
         newRam?: string[],
         newStorage?: string[]
     ) => {
-        // Always send complete filter state, using current state for unchanged filters
-        onFiltersChange({
-            price: newPrice !== undefined ? newPrice : (activeFilters?.price || undefined),
-            brands: newBrands !== undefined ? newBrands : selectedBrands,
-            ram: newRam !== undefined ? newRam : selectedRam,
-            storage: newStorage !== undefined ? newStorage : selectedStorage
-        });
+        // Build filters object - only include non-empty values
+        const filters: any = {};
+
+        // Price: use new value if provided, otherwise preserve active filter
+        if (newPrice !== undefined) {
+            filters.price = newPrice;
+        } else if (activeFilters?.price) {
+            filters.price = activeFilters.price;
+        }
+
+        // Arrays: only include if explicitly provided AND non-empty
+        const finalBrands = newBrands !== undefined ? newBrands : selectedBrands;
+        const finalRam = newRam !== undefined ? newRam : selectedRam;
+        const finalStorage = newStorage !== undefined ? newStorage : selectedStorage;
+
+        if (finalBrands.length > 0) filters.brands = finalBrands;
+        if (finalRam.length > 0) filters.ram = finalRam;
+        if (finalStorage.length > 0) filters.storage = finalStorage;
+
+        onFiltersChange(filters);
     };
 
     // Price Handlers

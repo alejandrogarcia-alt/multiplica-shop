@@ -53,10 +53,34 @@ export async function POST(request: NextRequest) {
 
     // 3. Agregar al carrito
     if (analysis.intent === 'add_to_cart') {
-      const productIndex = analysis.productIndex || 0;
-      if (lastProducts && lastProducts[productIndex]) {
-        const selectedProduct = lastProducts[productIndex];
+      let selectedProduct: MLProduct | undefined;
 
+      // Estrategia 1: Buscar por nombre si se especificó
+      if (analysis.products && analysis.products.length > 0) {
+        const productName = analysis.products[0];
+        // Intentar encontrar en lastProducts
+        selectedProduct = lastProducts?.find((p: MLProduct) =>
+          p.title.toLowerCase().includes(productName.toLowerCase())
+        );
+
+        // Si no está en contexto, buscarlo
+        if (!selectedProduct) {
+          const searchResult = await mlService.searchProducts(productName, 1);
+          if (searchResult.results.length > 0) {
+            selectedProduct = searchResult.results[0];
+          }
+        }
+      }
+
+      // Estrategia 2: Usar índice si no se encontró por nombre
+      if (!selectedProduct) {
+        const productIndex = analysis.productIndex || 0;
+        if (lastProducts && lastProducts[productIndex]) {
+          selectedProduct = lastProducts[productIndex];
+        }
+      }
+
+      if (selectedProduct) {
         // Buscar productos relacionados
         let suggestedProducts: MLProduct[] = [];
         if (selectedProduct.relatedProducts && selectedProduct.relatedProducts.length > 0) {
@@ -78,7 +102,7 @@ export async function POST(request: NextRequest) {
         });
       } else {
         return NextResponse.json({
-          response: 'Por favor, primero busca algunos productos para poder agregarlos al carrito.',
+          response: 'No pude encontrar el producto que quieres agregar. ¿Podrías ser más específico o buscarlo primero?',
           products: [],
           intent: 'add_to_cart',
         });
@@ -219,9 +243,9 @@ export async function POST(request: NextRequest) {
       console.log('🔍 Filtros activos:', searchFilters);
 
       if (analysis.intent === 'recommendation') {
-        searchResults = await mlService.searchProducts(analysis.searchQuery, 10, 0, searchFilters);
+        searchResults = await mlService.searchProducts(analysis.searchQuery || '', 10, 0, searchFilters);
       } else {
-        searchResults = await mlService.searchProducts(analysis.searchQuery, 20, 0, searchFilters);
+        searchResults = await mlService.searchProducts(analysis.searchQuery || '', 20, 0, searchFilters);
       }
 
       const products = searchResults.results;
