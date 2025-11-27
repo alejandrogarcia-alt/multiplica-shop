@@ -63,11 +63,12 @@ export default function SearchFilters({
         newRam?: string[],
         newStorage?: string[]
     ) => {
+        // Always send complete filter state, using current state for unchanged filters
         onFiltersChange({
-            price: newPrice || priceRange,
-            brands: newBrands || selectedBrands,
-            ram: newRam || selectedRam,
-            storage: newStorage || selectedStorage
+            price: newPrice !== undefined ? newPrice : (activeFilters?.price || undefined),
+            brands: newBrands !== undefined ? newBrands : selectedBrands,
+            ram: newRam !== undefined ? newRam : selectedRam,
+            storage: newStorage !== undefined ? newStorage : selectedStorage
         });
     };
 

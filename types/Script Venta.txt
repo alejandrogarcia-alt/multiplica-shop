@@ -1,4 +1,5 @@
-1 - Quiero comprar un Iphone
+1 - En el chat : Quiero comprar un Iphone
 2 - Hacer Click en 128GB de almacenamiento
-3 - Me comparas las caracteristicas de estos modelos?
-4 - Agregar el iphone 13 plus al carrito
+3 - En el chat : Me comparas las caracteristicas de estos modelos?
+4 - Click en el boton que muestra la comparativa
+5 - En el Chat : Agregar el iphone 13 plus al carrito
