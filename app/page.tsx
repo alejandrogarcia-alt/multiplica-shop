@@ -12,6 +12,11 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [displayTitle, setDisplayTitle] = useState('Productos Destacados');
 
+  // ====== FADE EFFECT - Comentar estas 2 líneas para deshacer ======
+  const [isFading, setIsFading] = useState(false);
+  const [pendingProducts, setPendingProducts] = useState<MLProduct[] | null>(null);
+  // ==================================================================
+
   useEffect(() => {
     // Cargar productos destacados al inicio
     fetchFeaturedProducts();
@@ -31,10 +36,27 @@ export default function Home() {
     }
   };
 
+  // ====== FADE EFFECT - Comentar esta función para deshacer ======
   const handleProductsFound = (newProducts: MLProduct[]) => {
-    setProducts(newProducts);
-    setDisplayTitle('Resultados de búsqueda');
+    // Fade out
+    setIsFading(true);
+    setPendingProducts(newProducts);
+
+    // Después de 300ms, cambiar productos y hacer fade in
+    setTimeout(() => {
+      setProducts(newProducts);
+      setDisplayTitle('Resultados de búsqueda');
+      setIsFading(false);
+    }, 300);
   };
+  // ==================================================================
+
+  // ====== SIN FADE EFFECT - Descomentar esto para deshacer ======
+  // const handleProductsFound = (newProducts: MLProduct[]) => {
+  //   setProducts(newProducts);
+  //   setDisplayTitle('Resultados de búsqueda');
+  // };
+  // ==================================================================
 
   return (
     <div className="flex flex-col h-screen">
@@ -55,7 +77,12 @@ export default function Home() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
               </div>
             ) : (
-              <ProductsGrid products={products} title={displayTitle} />
+              // ====== FADE EFFECT - Comentar el className y descomentar el de abajo para deshacer ======
+              <div className={`transition-opacity duration-300 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+              {/* <div> */}
+              {/* ========================================================================================== */}
+                <ProductsGrid products={products} title={displayTitle} />
+              </div>
             )}
           </div>
         </div>

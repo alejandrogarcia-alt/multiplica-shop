@@ -22,9 +22,20 @@ export default function ProductsGrid({ products, title = 'Productos' }: Products
     <div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">{title}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+        {/* ====== FADE EFFECT - Comentar el map con animación y descomentar el de abajo para deshacer ====== */}
+        {products.map((product, index) => (
+          <div
+            key={product.id}
+            className="animate-fadeIn"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <ProductCard product={product} />
+          </div>
         ))}
+        {/* {products.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))} */}
+        {/* ================================================================================================= */}
       </div>
     </div>
   );
