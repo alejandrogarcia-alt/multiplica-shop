@@ -43,7 +43,7 @@ git push -u origin main
 5. **Variables de Entorno** (Environment Variables):
    Agrega estas variables:
    ```
-   GOOGLE_API_KEY=AIzaSyDL9bBBBfjeruD_MuF8IMaoiqth0WAkF6Q
+   GOOGLE_API_KEY=tu_api_key_aqui
    NEXT_PUBLIC_ML_API_URL=https://api.mercadolibre.com
    NODE_VERSION=20
    ```
