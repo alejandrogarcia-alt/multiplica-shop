@@ -350,7 +350,7 @@ NO incluyas listas de productos, solo texto conversacional.`;
     console.log('✅ Gemini respuesta generada');
     return text;
   } catch (error) {
-    console.warn('⚠️  Gemini falló, usando respuesta simple');
+    console.warn('⚠️  Gemini falló, usando respuesta simple:', error);
   }
 
   // Fallback: respuestas simples
