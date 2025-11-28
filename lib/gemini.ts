@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { memoryCache } from './cache';
 
 const apiKey = process.env.GOOGLE_API_KEY || '';
 
@@ -8,6 +9,9 @@ if (!apiKey) {
 
 const ai = new GoogleGenAI({ apiKey });
 const modelName = 'gemini-2.5-flash';
+
+// Cache TTL: 1 hour for Gemini API calls (intent analysis can be cached longer)
+const GEMINI_CACHE_TTL = 60 * 60 * 1000;
 
 /**
  * Analiza el mensaje del usuario y extrae la intención de búsqueda
@@ -106,6 +110,19 @@ Ejemplos:
 - "el segundo" → {"intent": "add_to_cart", "productIndex": 1}
 - "me llevo ese" → {"intent": "add_to_cart", "productIndex": 0}`;
 
+  // Create cache payload
+  const cachePayload = {
+    function: 'analyzeUserIntent',
+    userMessage,
+    prompt: prompt.substring(0, 100), // Include first 100 chars of prompt for cache key variation
+  };
+
+  // Try with cache
+  const cachedResult = memoryCache.get(cachePayload);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
   try {
     console.log('🤖 Analizando intención con Gemini...');
     const response = await ai.models.generateContent({
@@ -121,6 +138,8 @@ Ejemplos:
     if (jsonMatch) {
       const result = JSON.parse(jsonMatch[0]);
       console.log('✅ Gemini análisis:', result);
+      // Cache the result
+      memoryCache.set(cachePayload, result, GEMINI_CACHE_TTL);
       return result;
     }
   } catch (error) {
@@ -355,34 +374,48 @@ Genera una respuesta breve (máximo 2-3 líneas) que:
 
 NO incluyas listas de productos, solo texto conversacional.`;
 
-  try {
-    console.log('🤖 Generando respuesta con Gemini...');
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: prompt
-    });
+  // Create cache payload
+  const cachePayload = {
+    function: 'generateResponse',
+    userMessage,
+    productsCount,
+    searchQuery,
+  };
 
-    let text = response.text;
+  return memoryCache.withCache(
+    cachePayload,
+    async () => {
+      try {
+        console.log('🤖 Generando respuesta con Gemini...');
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt
+        });
 
-    if (!text) text = "";
+        let text = response.text;
 
-    console.log('✅ Gemini respuesta generada');
-    return text;
-  } catch (error) {
-    console.warn('⚠️  Gemini falló, usando respuesta simple:', error);
-  }
+        if (!text) text = "";
 
-  // Fallback: respuestas simples
-  if (productsCount > 0) {
-    const responses = [
-      `¡Perfecto! Encontré ${productsCount} opciones de ${searchQuery}. Aquí están los mejores resultados para ti.`,
-      `Excelente elección. Te muestro ${productsCount} productos de ${searchQuery} que podrían interesarte.`,
-      `¡Genial! Hay ${productsCount} opciones de ${searchQuery} disponibles. Échales un vistazo.`,
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
-  } else {
-    return `No encontré productos con "${searchQuery}". Intenta buscar por marca (iPhone, Samsung, Xiaomi) o por tipo de producto.`;
-  }
+        console.log('✅ Gemini respuesta generada');
+        return text;
+      } catch (error) {
+        console.warn('⚠️  Gemini falló, usando respuesta simple:', error);
+        // Fallback response
+        if (productsCount > 0) {
+          const responses = [
+            `¡Perfecto! Encontré ${productsCount} opciones de ${searchQuery}. Aquí están los mejores resultados para ti.`,
+            `Excelente elección. Te muestro ${productsCount} productos de ${searchQuery} que podrían interesarte.`,
+            `¡Genial! Hay ${productsCount} opciones de ${searchQuery} disponibles. Échales un vistazo.`,
+          ];
+          return responses[Math.floor(Math.random() * responses.length)];
+        } else {
+          return `No encontré productos con "${searchQuery}". Intenta buscar por marca (iPhone, Samsung, Xiaomi) o por tipo de producto.`;
+        }
+      }
+    },
+    GEMINI_CACHE_TTL
+  );
+
 }
 
 /**
@@ -510,35 +543,47 @@ Ejemplos:
 - "más de 20000" → {"price": {"min": 20000}}
 - "Samsung de 8GB y menos de 15000" → {"brands": ["Samsung"], "ram": ["8GB"], "price": {"max": 15000}}`;
 
-  try {
-    console.log('🤖 Extrayendo filtros con Gemini...');
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: prompt
-    });
+  // Create cache payload
+  const cachePayload = {
+    function: 'extractSearchFilters',
+    userMessage,
+  };
 
-    let text = response.text;
-    if (!text) return null;
+  return memoryCache.withCache(
+    cachePayload,
+    async () => {
+      try {
+        console.log('🤖 Extrayendo filtros con Gemini...');
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt
+        });
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const filters = JSON.parse(jsonMatch[0]);
-      console.log('✅ Filtros extraídos:', filters);
+        let text = response.text;
+        if (!text) return null;
 
-      // Limpiar nulos para que no estorben en el spread operator
-      const cleanFilters: any = {};
-      if (filters.brands && filters.brands.length > 0) cleanFilters.brands = filters.brands;
-      if (filters.ram && filters.ram.length > 0) cleanFilters.ram = filters.ram;
-      if (filters.storage && filters.storage.length > 0) cleanFilters.storage = filters.storage;
-      if (filters.colors && filters.colors.length > 0) cleanFilters.colors = filters.colors;
-      if (filters.price) cleanFilters.price = filters.price;
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const filters = JSON.parse(jsonMatch[0]);
+          console.log('✅ Filtros extraídos:', filters);
 
-      return Object.keys(cleanFilters).length > 0 ? cleanFilters : null;
-    }
+          // Limpiar nulos para que no estorben en el spread operator
+          const cleanFilters: any = {};
+          if (filters.brands && filters.brands.length > 0) cleanFilters.brands = filters.brands;
+          if (filters.ram && filters.ram.length > 0) cleanFilters.ram = filters.ram;
+          if (filters.storage && filters.storage.length > 0) cleanFilters.storage = filters.storage;
+          if (filters.colors && filters.colors.length > 0) cleanFilters.colors = filters.colors;
+          if (filters.price) cleanFilters.price = filters.price;
 
-    return null;
-  } catch (error) {
-    console.error('⚠️  Error extrayendo filtros:', error);
-    return null;
-  }
+          return Object.keys(cleanFilters).length > 0 ? cleanFilters : null;
+        }
+
+        return null;
+      } catch (error) {
+        console.error('⚠️  Error extrayendo filtros:', error);
+        return null;
+      }
+    },
+    GEMINI_CACHE_TTL
+  );
 }

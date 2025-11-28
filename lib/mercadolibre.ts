@@ -1,10 +1,14 @@
 import axios from 'axios';
 import { MLProduct, MLSearchResponse, MLCategory } from '@/types';
 import { searchMockProducts, getFeaturedMockProducts } from '@/mock-data/products';
+import { memoryCache } from './cache';
 
 const ML_API_URL = process.env.NEXT_PUBLIC_ML_API_URL || 'https://api.mercadolibre.com';
 const ML_SITE_ID = 'MLM'; // México
 const API_MODE = process.env.NEXT_PUBLIC_API_MODE || 'REAL'; // REAL o SIMULADO
+
+// Cache TTL: 1 hour for ML API calls
+const ML_CACHE_TTL = 60 * 60 * 1000;
 
 export class MercadoLibreService {
   private apiUrl: string;
@@ -23,96 +27,123 @@ export class MercadoLibreService {
    * Buscar productos por término
    */
   async searchProducts(query: string, limit: number = 20, offset: number = 0, filters?: any): Promise<MLSearchResponse> {
-    // Modo SIMULADO: usar datos mock
-    if (this.mode === 'SIMULADO') {
-      console.log(`🎭 Modo SIMULADO: Buscando "${query}" en datos locales con filtros:`, filters);
-      const results = searchMockProducts(query, limit, filters);
-      return {
-        site_id: this.siteId,
-        query: query,
-        results,
-        paging: {
-          total: results.length,
-          offset,
-          limit,
-        },
-      };
-    }
+    // Create cache key from all parameters
+    const cachePayload = {
+      method: 'searchProducts',
+      mode: this.mode,
+      query,
+      limit,
+      offset,
+      filters,
+    };
 
-    // Modo REAL: usar API de Mercado Libre
-    try {
-      console.log(`🌐 Modo REAL: Buscando "${query}" en Mercado Libre API`);
-      const params: any = {
-        q: query,
-        limit,
-        offset,
-      };
+    return memoryCache.withCache(
+      cachePayload,
+      async () => {
+        // Modo SIMULADO: usar datos mock
+        if (this.mode === 'SIMULADO') {
+          console.log(`🎭 Modo SIMULADO: Buscando "${query}" en datos locales con filtros:`, filters);
+          const results = searchMockProducts(query, limit, filters);
+          return {
+            site_id: this.siteId,
+            query: query,
+            results,
+            paging: {
+              total: results.length,
+              offset,
+              limit,
+            },
+          };
+        }
 
-      // Agregar filtros de precio si existen
-      if (filters?.price?.min) params.price_min = filters.price.min;
-      if (filters?.price?.max) params.price_max = filters.price.max;
+        // Modo REAL: usar API de Mercado Libre
+        try {
+          console.log(`🌐 Modo REAL: Buscando "${query}" en Mercado Libre API`);
+          const params: any = {
+            q: query,
+            limit,
+            offset,
+          };
 
-      // Nota: La API de ML tiene filtros específicos (BRAND, RAM, etc) que se pasan diferente
-      // Por ahora en modo REAL solo implementamos precio, ya que los IDs de filtro son complejos
-      // Para una implementación completa se requeriría mapear los IDs de filtro de ML
+          // Agregar filtros de precio si existen
+          if (filters?.price?.min) params.price_min = filters.price.min;
+          if (filters?.price?.max) params.price_max = filters.price.max;
 
-      const response = await axios.get(`${this.apiUrl}/sites/${this.siteId}/search`, {
-        params,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-          'Accept': 'application/json',
-          'Accept-Language': 'es-MX,es;q=0.9',
-        },
-        timeout: 10000,
-      });
-      return response.data;
-    } catch (error: any) {
-      console.error('❌ Error buscando productos en API real:', error?.response?.status, error?.message);
-      // Retornar estructura vacía en caso de error
-      return {
-        site_id: this.siteId,
-        query: query,
-        results: [],
-        paging: {
-          total: 0,
-          offset: 0,
-          limit: limit,
-        },
-      };
-    }
+          // Nota: La API de ML tiene filtros específicos (BRAND, RAM, etc) que se pasan diferente
+          // Por ahora en modo REAL solo implementamos precio, ya que los IDs de filtro son complejos
+          // Para una implementación completa se requeriría mapear los IDs de filtro de ML
+
+          const response = await axios.get(`${this.apiUrl}/sites/${this.siteId}/search`, {
+            params,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+              'Accept': 'application/json',
+              'Accept-Language': 'es-MX,es;q=0.9',
+            },
+            timeout: 10000,
+          });
+          return response.data;
+        } catch (error: any) {
+          console.error('❌ Error buscando productos en API real:', error?.response?.status, error?.message);
+          // Retornar estructura vacía en caso de error
+          return {
+            site_id: this.siteId,
+            query: query,
+            results: [],
+            paging: {
+              total: 0,
+              offset: 0,
+              limit: limit,
+            },
+          };
+        }
+      },
+      ML_CACHE_TTL
+    );
   }
 
   /**
    * Obtener productos destacados (ofertas del día)
    */
   async getFeaturedProducts(): Promise<MLProduct[]> {
-    // Modo SIMULADO: usar datos mock
-    if (this.mode === 'SIMULADO') {
-      console.log('🎭 Modo SIMULADO: Obteniendo productos destacados de datos locales');
-      return getFeaturedMockProducts(12);
-    }
+    const cachePayload = {
+      method: 'getFeaturedProducts',
+      mode: this.mode,
+    };
 
-    // Modo REAL: usar API de Mercado Libre
-    try {
-      console.log('🌐 Modo REAL: Obteniendo productos destacados de Mercado Libre API');
-      const response = await axios.get(`${this.apiUrl}/sites/${this.siteId}/search`, {
-        params: {
-          q: 'electronica',
-          limit: 12,
-        },
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-          'Accept': 'application/json',
-          'Accept-Language': 'es-MX,es;q=0.9',
-        },
-        timeout: 10000,
-      });
-      return response.data.results || [];
-    } catch (error: any) {
-      console.error('❌ Error obteniendo productos destacados de API real:', error?.response?.status, error?.message);
-      // Retornar array vacío en lugar de lanzar error
-      return [];
-    }
+    return memoryCache.withCache(
+      cachePayload,
+      async () => {
+        // Modo SIMULADO: usar datos mock
+        if (this.mode === 'SIMULADO') {
+          console.log('🎭 Modo SIMULADO: Obteniendo productos destacados de datos locales');
+          return getFeaturedMockProducts(12);
+        }
+
+        // Modo REAL: usar API de Mercado Libre
+        try {
+          console.log('🌐 Modo REAL: Obteniendo productos destacados de Mercado Libre API');
+          const response = await axios.get(`${this.apiUrl}/sites/${this.siteId}/search`, {
+            params: {
+              q: 'electronica',
+              limit: 12,
+            },
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+              'Accept': 'application/json',
+              'Accept-Language': 'es-MX,es;q=0.9',
+            },
+            timeout: 10000,
+          });
+          return response.data.results || [];
+        } catch (error: any) {
+          console.error('❌ Error obteniendo productos destacados de API real:', error?.response?.status, error?.message);
+          // Retornar array vacío en lugar de lanzar error
+          return [];
+        }
+      },
+      ML_CACHE_TTL
+    );
   }
 
   /**

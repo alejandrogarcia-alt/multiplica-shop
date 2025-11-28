@@ -569,7 +569,7 @@ export const mockProducts: MLProduct[] = [
     title: 'OnePlus 12 256GB Negro',
     price: 24999,
     currency_id: 'MXN',
-    thumbnail: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/oneplus-12.jpg',
     condition: 'new',
     permalink: 'https://www.mercadolibre.com.mx/oneplus-12',
     seller: {
@@ -612,7 +612,7 @@ export const mockProducts: MLProduct[] = [
     title: 'OnePlus Nord 3 5G 256GB Gris',
     price: 10999,
     currency_id: 'MXN',
-    thumbnail: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400&h=400&fit=crop',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/oneplus-nord-3-5g.jpg',
     condition: 'new',
     permalink: 'https://www.mercadolibre.com.mx/oneplus-nord-3',
     seller: {
@@ -633,7 +633,7 @@ export const mockProducts: MLProduct[] = [
     title: 'Nothing Phone 2 256GB Blanco',
     price: 18999,
     currency_id: 'MXN',
-    thumbnail: 'https://images.unsplash.com/photo-1592286927505-c7c8c72c0c76?w=400&h=400&fit=crop',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2.jpg',
     condition: 'new',
     permalink: 'https://www.mercadolibre.com.mx/nothing-phone-2',
     seller: {
@@ -677,7 +677,7 @@ export const mockProducts: MLProduct[] = [
     title: 'Realme 11 Pro 256GB Verde',
     price: 7499,
     currency_id: 'MXN',
-    thumbnail: 'https://images.unsplash.com/photo-1567581935884-3349723552ca?w=400&h=400&fit=crop',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/realme-11-pro.jpg',
     condition: 'new',
     permalink: 'https://www.mercadolibre.com.mx/realme-11-pro',
     seller: {
@@ -696,7 +696,7 @@ export const mockProducts: MLProduct[] = [
     title: 'Samsung Galaxy A34 5G 128GB Negro',
     price: 6499,
     currency_id: 'MXN',
-    thumbnail: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400&h=400&fit=crop',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a34-5g.jpg',
     condition: 'new',
     permalink: 'https://www.mercadolibre.com.mx/samsung-a34',
     seller: {
@@ -715,7 +715,7 @@ export const mockProducts: MLProduct[] = [
     title: 'Xiaomi Redmi 13C 128GB Azul',
     price: 3499,
     currency_id: 'MXN',
-    thumbnail: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-redmi-13c.jpg',
     condition: 'new',
     permalink: 'https://www.mercadolibre.com.mx/redmi-13c',
     seller: {
@@ -733,7 +733,7 @@ export const mockProducts: MLProduct[] = [
     title: 'Motorola Moto G54 5G 128GB Grafito',
     price: 4499,
     currency_id: 'MXN',
-    thumbnail: 'https://images.unsplash.com/photo-1585060544812-6b45742d762f?w=400&h=400&fit=crop',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-moto-g54-5g.jpg',
     condition: 'new',
     permalink: 'https://www.mercadolibre.com.mx/moto-g54',
     seller: {
@@ -753,7 +753,7 @@ export const mockProducts: MLProduct[] = [
     title: 'Samsung Galaxy S24+ 512GB Violeta',
     price: 32999,
     currency_id: 'MXN',
-    thumbnail: 'https://images.unsplash.com/photo-1610945264803-c22b62d2a7b7?w=400&h=400&fit=crop',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-plus-5g.jpg',
     condition: 'new',
     permalink: 'https://www.mercadolibre.com.mx/samsung-s24-plus',
     seller: {
@@ -772,7 +772,7 @@ export const mockProducts: MLProduct[] = [
     title: 'Xiaomi 14 Ultra 512GB Negro',
     price: 34999,
     currency_id: 'MXN',
-    thumbnail: 'https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?w=400&h=400&fit=crop',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-14-ultra.jpg',
     condition: 'new',
     permalink: 'https://www.mercadolibre.com.mx/xiaomi-14-ultra',
     seller: {
@@ -815,7 +815,7 @@ export const mockProducts: MLProduct[] = [
     title: 'Google Pixel 8 Pro 512GB Bay',
     price: 29999,
     currency_id: 'MXN',
-    thumbnail: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400&h=400&fit=crop',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-8-pro.jpg',
     condition: 'new',
     permalink: 'https://www.mercadolibre.com.mx/pixel-8-pro-512',
     seller: {
@@ -834,7 +834,7 @@ export const mockProducts: MLProduct[] = [
     title: 'Samsung Galaxy Z Flip5 256GB Crema',
     price: 24999,
     currency_id: 'MXN',
-    thumbnail: 'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=400&h=400&fit=crop',
+    thumbnail: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-flip5.jpg',
     condition: 'new',
     permalink: 'https://www.mercadolibre.com.mx/samsung-z-flip5',
     seller: {
@@ -958,6 +958,233 @@ export const mockProducts: MLProduct[] = [
       connectivity: [],
       os: 'N/A',
       weight: 30,
+      waterResistance: 'N/A'
+    }
+  },
+  // Accesorios Motorola
+  {
+    id: 'ACC005',
+    title: 'Funda Protectora para Motorola Edge 40 Pro - Negro',
+    price: 399,
+    currency_id: 'MXN',
+    thumbnail: 'https://http2.mlstatic.com/D_NQ_NP_985371-MLM51234567890-ABC123.webp',
+    condition: 'new',
+    permalink: 'https://www.mercadolibre.com.mx/funda-motorola-edge-40',
+    seller: {
+      id: 345678,
+      nickname: 'Motorola Oficial',
+    },
+    shipping: {
+      free_shipping: true,
+    },
+    specs: {
+      ram: 'N/A',
+      storage: 'N/A',
+      processor: 'N/A',
+      screen: { size: 'N/A', type: 'N/A', refresh: 0 },
+      camera: { main: 'N/A', front: 'N/A' },
+      battery: { capacity: 'N/A', charging: 'N/A' },
+      connectivity: [],
+      os: 'N/A',
+      weight: 25,
+      waterResistance: 'N/A'
+    }
+  },
+  {
+    id: 'ACC006',
+    title: 'Cargador Turbo Power 68W Motorola USB-C',
+    price: 699,
+    currency_id: 'MXN',
+    thumbnail: 'https://http2.mlstatic.com/D_NQ_NP_612345-MLA45678901-ABC123.webp',
+    condition: 'new',
+    permalink: 'https://www.mercadolibre.com.mx/cargador-motorola-68w',
+    seller: {
+      id: 345678,
+      nickname: 'Motorola Oficial',
+    },
+    shipping: {
+      free_shipping: true,
+    },
+    specs: {
+      ram: 'N/A',
+      storage: 'N/A',
+      processor: 'N/A',
+      screen: { size: 'N/A', type: 'N/A', refresh: 0 },
+      camera: { main: 'N/A', front: 'N/A' },
+      battery: { capacity: 'N/A', charging: '68W Turbo Power' },
+      connectivity: ['USB-C'],
+      os: 'N/A',
+      weight: 80,
+      waterResistance: 'N/A'
+    }
+  },
+  {
+    id: 'ACC007',
+    title: 'Protector de Pantalla Vidrio Templado para Motorola Edge 40 Pro',
+    price: 299,
+    currency_id: 'MXN',
+    thumbnail: 'https://http2.mlstatic.com/D_NQ_NP_789012-MLA56789012-ABC123.webp',
+    condition: 'new',
+    permalink: 'https://www.mercadolibre.com.mx/protector-motorola-edge-40',
+    seller: {
+      id: 567890,
+      nickname: 'Accesorios Premium',
+    },
+    shipping: {
+      free_shipping: false,
+    },
+    specs: {
+      ram: 'N/A',
+      storage: 'N/A',
+      processor: 'N/A',
+      screen: { size: 'N/A', type: 'Vidrio Templado 9H', refresh: 0 },
+      camera: { main: 'N/A', front: 'N/A' },
+      battery: { capacity: 'N/A', charging: 'N/A' },
+      connectivity: [],
+      os: 'N/A',
+      weight: 8,
+      waterResistance: 'N/A'
+    }
+  },
+  // Accesorios Samsung
+  {
+    id: 'ACC008',
+    title: 'Funda Clear Cover para Samsung Galaxy S24 Ultra',
+    price: 849,
+    currency_id: 'MXN',
+    thumbnail: 'https://images.samsung.com/is/image/samsung/p6pim/mx/ef-qs928tbegww/gallery/mx-galaxy-s24-ultra-clear-cover-ef-qs928tbegww-539407825',
+    condition: 'new',
+    permalink: 'https://www.mercadolibre.com.mx/funda-samsung-s24-ultra',
+    seller: {
+      id: 234567,
+      nickname: 'Samsung Store',
+    },
+    shipping: {
+      free_shipping: true,
+    },
+    specs: {
+      ram: 'N/A',
+      storage: 'N/A',
+      processor: 'N/A',
+      screen: { size: 'N/A', type: 'N/A', refresh: 0 },
+      camera: { main: 'N/A', front: 'N/A' },
+      battery: { capacity: 'N/A', charging: 'N/A' },
+      connectivity: [],
+      os: 'N/A',
+      weight: 30,
+      waterResistance: 'N/A'
+    }
+  },
+  {
+    id: 'ACC009',
+    title: 'Cargador Super Fast Charging 45W Samsung USB-C',
+    price: 899,
+    currency_id: 'MXN',
+    thumbnail: 'https://images.samsung.com/is/image/samsung/p6pim/mx/ep-t4510xbegmx/gallery/mx-45w-super-fast-charging-wall-charger-ep-t4510xbegmx-531492530',
+    condition: 'new',
+    permalink: 'https://www.mercadolibre.com.mx/cargador-samsung-45w',
+    seller: {
+      id: 234567,
+      nickname: 'Samsung Store',
+    },
+    shipping: {
+      free_shipping: true,
+    },
+    specs: {
+      ram: 'N/A',
+      storage: 'N/A',
+      processor: 'N/A',
+      screen: { size: 'N/A', type: 'N/A', refresh: 0 },
+      camera: { main: 'N/A', front: 'N/A' },
+      battery: { capacity: 'N/A', charging: '45W Super Fast Charging' },
+      connectivity: ['USB-C'],
+      os: 'N/A',
+      weight: 75,
+      waterResistance: 'N/A'
+    }
+  },
+  // Accesorios Xiaomi
+  {
+    id: 'ACC010',
+    title: 'Funda Original Xiaomi para Redmi Note 13 Pro',
+    price: 349,
+    currency_id: 'MXN',
+    thumbnail: 'https://i01.appmifile.com/v1/MI_18455B3E4DA706226CF7535A58E875F0267/pms_1702547082.14662479.jpg',
+    condition: 'new',
+    permalink: 'https://www.mercadolibre.com.mx/funda-xiaomi-redmi-note-13',
+    seller: {
+      id: 456789,
+      nickname: 'Xiaomi Store',
+    },
+    shipping: {
+      free_shipping: true,
+    },
+    specs: {
+      ram: 'N/A',
+      storage: 'N/A',
+      processor: 'N/A',
+      screen: { size: 'N/A', type: 'N/A', refresh: 0 },
+      camera: { main: 'N/A', front: 'N/A' },
+      battery: { capacity: 'N/A', charging: 'N/A' },
+      connectivity: [],
+      os: 'N/A',
+      weight: 20,
+      waterResistance: 'N/A'
+    }
+  },
+  {
+    id: 'ACC011',
+    title: 'Cargador Xiaomi HyperCharge 120W',
+    price: 799,
+    currency_id: 'MXN',
+    thumbnail: 'https://i01.appmifile.com/v1/MI_18455B3E4DA706226CF7535A58E875F0267/pms_1635497054.41099274.jpg',
+    condition: 'new',
+    permalink: 'https://www.mercadolibre.com.mx/cargador-xiaomi-120w',
+    seller: {
+      id: 456789,
+      nickname: 'Xiaomi Store',
+    },
+    shipping: {
+      free_shipping: true,
+    },
+    specs: {
+      ram: 'N/A',
+      storage: 'N/A',
+      processor: 'N/A',
+      screen: { size: 'N/A', type: 'N/A', refresh: 0 },
+      camera: { main: 'N/A', front: 'N/A' },
+      battery: { capacity: 'N/A', charging: '120W HyperCharge' },
+      connectivity: ['USB-C'],
+      os: 'N/A',
+      weight: 95,
+      waterResistance: 'N/A'
+    }
+  },
+  {
+    id: 'ACC012',
+    title: 'Protector de Pantalla Xiaomi para Redmi Note 13 Pro - Pack 2 unidades',
+    price: 249,
+    currency_id: 'MXN',
+    thumbnail: 'https://i01.appmifile.com/v1/MI_18455B3E4DA706226CF7535A58E875F0267/pms_1702547251.39525894.jpg',
+    condition: 'new',
+    permalink: 'https://www.mercadolibre.com.mx/protector-xiaomi-redmi-note-13',
+    seller: {
+      id: 567890,
+      nickname: 'Accesorios Premium',
+    },
+    shipping: {
+      free_shipping: false,
+    },
+    specs: {
+      ram: 'N/A',
+      storage: 'N/A',
+      processor: 'N/A',
+      screen: { size: 'N/A', type: 'Vidrio Templado', refresh: 0 },
+      camera: { main: 'N/A', front: 'N/A' },
+      battery: { capacity: 'N/A', charging: 'N/A' },
+      connectivity: [],
+      os: 'N/A',
+      weight: 10,
       waterResistance: 'N/A'
     }
   }

@@ -8,6 +8,7 @@ import { useCart } from '@/contexts/CartContext';
 import ComparisonTable from './chat/ComparisonTable';
 import SearchFilters from './chat/SearchFilters';
 import ProductSuggestions from './chat/ProductSuggestions';
+import AccessorySuggestionPrompt from './chat/AccessorySuggestionPrompt';
 
 interface ChatPanelProps {
   onProductsFound: (products: MLProduct[]) => void;
@@ -131,7 +132,8 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
         geminiInsights: data.geminiInsights,
         priceRange: data.priceRange,
         availableFilters: data.availableFilters,
-        activeFilters: data.activeFilters
+        activeFilters: data.activeFilters,
+        accessorySuggestionFor: data.accessorySuggestionFor,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -176,6 +178,75 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  // Handler para cuando el usuario responde a la sugerencia de accesorios
+  const handleAccessoryResponse = async (wantsAccessories: boolean, product: MLProduct) => {
+    if (wantsAccessories) {
+      // Enviar mensaje automático para buscar accesorios
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: `Mostrar accesorios para ${product.title}`,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, userMessage]);
+      setIsLoading(true);
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: `buscar accesorios para ${product.title}`,
+            lastProducts: lastProducts,
+            filters: activeFilters,
+            productForAccessories: product, // Enviar el producto para buscar accesorios
+          }),
+        });
+
+        const data = await response.json();
+
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.response,
+          timestamp: new Date(),
+          products: data.products,
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+
+        // Si hay productos, actualizar el grid principal
+        if (data.products && data.products.length > 0) {
+          onProductsFound(data.products);
+          setLastProducts(data.products);
+        }
+      } catch (error) {
+        console.error('Error buscando accesorios:', error);
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: 'Lo siento, tuve un problema buscando los accesorios. Por favor intenta de nuevo.',
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Usuario dijo "No, gracias"
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: 'No, gracias',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
     }
   };
 
@@ -242,6 +313,16 @@ export default function ChatPanel({ onProductsFound }: ChatPanelProps) {
               {message.suggestedProducts && message.suggestedProducts.length > 0 && (
                 <div className="mt-3">
                   <ProductSuggestions products={message.suggestedProducts} />
+                </div>
+              )}
+
+              {/* Accessory Suggestion Prompt */}
+              {message.accessorySuggestionFor && (
+                <div className="mt-3">
+                  <AccessorySuggestionPrompt
+                    product={message.accessorySuggestionFor}
+                    onResponse={(wantsAccessories) => handleAccessoryResponse(wantsAccessories, message.accessorySuggestionFor!)}
+                  />
                 </div>
               )}
             </div>

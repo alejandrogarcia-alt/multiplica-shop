@@ -11,13 +11,141 @@ import { extractFiltersFromProducts } from '@/lib/utils'; // New import
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, lastProducts, filters } = await request.json();
+    const { message, lastProducts, filters, productForAccessories } = await request.json();
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
         { error: 'Mensaje inválido' },
         { status: 400 }
       );
+    }
+
+    // Detectar comando /flush cache
+    if (message.trim().toLowerCase() === '/flush cache') {
+      try {
+        // Llamar al endpoint de flush
+        const response = await fetch(`${request.nextUrl.origin}/api/cache/flush`, {
+          method: 'POST',
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          return NextResponse.json({
+            response: '✅ Cache limpiado exitosamente. Todas las búsquedas y análisis se realizarán de nuevo.',
+            products: [],
+            intent: 'system_command',
+          });
+        } else {
+          return NextResponse.json({
+            response: '❌ Error al limpiar el cache. Por favor, intenta de nuevo.',
+            products: [],
+            intent: 'system_command',
+          });
+        }
+      } catch (error) {
+        console.error('Error calling flush cache endpoint:', error);
+        return NextResponse.json({
+          response: '❌ Error al limpiar el cache. Por favor, intenta de nuevo.',
+          products: [],
+          intent: 'system_command',
+        });
+      }
+    }
+
+    // Detectar búsqueda de accesorios
+    if (productForAccessories) {
+      console.log('🔍 Buscando accesorios específicos para:', productForAccessories.title);
+
+      // Extraer marca del producto
+      const productTitle = productForAccessories.title.toLowerCase();
+      let brand = '';
+      const brandPatterns = ['iphone', 'samsung', 'xiaomi', 'motorola', 'google', 'pixel', 'huawei', 'oppo', 'realme'];
+      for (const pattern of brandPatterns) {
+        if (productTitle.includes(pattern)) {
+          brand = pattern;
+          break;
+        }
+      }
+
+      try {
+        // Buscar productos con palabras clave de accesorios
+        const accessoryKeywords = ['funda', 'cargador', 'protector', 'cable', 'auricular', 'batería'];
+
+        // Buscar cada tipo de accesorio
+        let allAccessories: MLProduct[] = [];
+
+        for (const keyword of accessoryKeywords) {
+          const searchQuery = brand ? `${keyword} ${brand}` : keyword;
+          const searchResults = await mlService.searchProducts(searchQuery, 20, 0);
+          allAccessories = [...allAccessories, ...searchResults.results];
+        }
+
+        // Eliminar duplicados basándose en el ID
+        const uniqueAccessories = Array.from(
+          new Map(allAccessories.map(item => [item.id, item])).values()
+        );
+
+        // Filtrar para excluir teléfonos y asegurar que sea de la marca correcta
+        const accessories = uniqueAccessories.filter(product => {
+          const title = product.title.toLowerCase();
+
+          // Excluir si el título contiene palabras que indican que es un teléfono
+          const phoneIndicators = ['gb ram', 'gb rom', '128gb', '256gb', '512gb', '1tb'];
+          const hasPhoneIndicator = phoneIndicators.some(indicator => title.includes(indicator));
+
+          // Excluir si tiene specs típicos de teléfono (RAM real, no N/A)
+          const hasPhoneSpecs = product.specs?.ram &&
+                                product.specs.ram !== 'N/A' &&
+                                product.specs.ram.includes('GB');
+
+          // Solo incluir si NO es un teléfono
+          if (hasPhoneIndicator || hasPhoneSpecs) {
+            return false;
+          }
+
+          // Verificar que el accesorio sea específico de la marca
+          if (brand) {
+            // Mapeo de marcas con sus alias
+            const brandAliases: { [key: string]: string[] } = {
+              'iphone': ['iphone', 'apple'],
+              'samsung': ['samsung', 'galaxy'],
+              'xiaomi': ['xiaomi', 'redmi'],
+              'motorola': ['motorola', 'moto'],
+              'google': ['google', 'pixel'],
+              'pixel': ['pixel', 'google'],
+              'huawei': ['huawei'],
+              'oppo': ['oppo'],
+              'realme': ['realme']
+            };
+
+            const aliases = brandAliases[brand] || [brand];
+            const hasBrand = aliases.some(alias => title.includes(alias));
+
+            return hasBrand;
+          }
+
+          return true;
+        });
+
+        console.log(`🔍 Marca detectada: "${brand}"`);
+        console.log(`📦 Total accesorios encontrados: ${accessories.length}`);
+        console.log(`🏷️  Accesorios: ${accessories.map(a => a.title).join(', ')}`);
+
+        return NextResponse.json({
+          response: accessories.length > 0
+            ? `Encontré ${accessories.length} accesorios compatibles con tu ${productForAccessories.title}:`
+            : `No encontré accesorios específicos en este momento.`,
+          products: accessories.slice(0, 20), // Limitar a 20 accesorios
+          intent: 'accessory_search',
+        });
+      } catch (error) {
+        console.error('Error buscando accesorios:', error);
+        return NextResponse.json({
+          response: 'Lo siento, no pude buscar accesorios en este momento.',
+          products: [],
+          intent: 'accessory_search',
+        });
+      }
     }
 
     // Crear contexto con los productos previos
@@ -92,13 +220,12 @@ export async function POST(request: NextRequest) {
         }
 
         return NextResponse.json({
-          response: suggestedProducts.length > 0
-            ? `¡Excelente elección! He agregado "${selectedProduct.title}" a tu carrito. También te podrían interesar estos accesorios:`
-            : `¡Excelente elección! He agregado "${selectedProduct.title}" a tu carrito.`,
+          response: `¡Excelente elección! He agregado "${selectedProduct.title}" a tu carrito.`,
           products: [],
           intent: 'add_to_cart',
           productToAdd: selectedProduct,
-          suggestedProducts: suggestedProducts
+          suggestedProducts: suggestedProducts,
+          accessorySuggestionFor: selectedProduct, // Preguntar si quiere accesorios
         });
       } else {
         return NextResponse.json({

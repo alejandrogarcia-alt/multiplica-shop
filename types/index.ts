@@ -84,6 +84,7 @@ export interface Message {
   availableFilters?: SearchFilters;
   activeFilters?: SearchFilters;
   suggestedProducts?: MLProduct[]; // Products suggested for cross-selling
+  accessorySuggestionFor?: MLProduct; // Product for which to suggest accessories
 }
 
 export interface ChatContextType {
