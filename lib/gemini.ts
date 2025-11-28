@@ -48,14 +48,17 @@ function extractKeywords(message: string): string {
   return words.join(' ') || message;
 }
 
-export async function analyzeUserIntent(userMessage: string): Promise<{
+// Type for intent analysis result
+export type IntentAnalysisResult = {
   intent: 'search' | 'greeting' | 'help' | 'comparison' | 'review' | 'add_to_cart' | 'recommendation' | 'view_details' | 'other';
   searchQuery: string;
   category?: string;
   products?: string[];
   productIndex?: number;
   priceRange?: { min?: number; max?: number };
-}> {
+};
+
+export async function analyzeUserIntent(userMessage: string): Promise<IntentAnalysisResult> {
   // Intentar con Gemini primero
   const prompt = `Eres un asistente de compras inteligente. Analiza el siguiente mensaje del usuario y determina:
 1. La intención principal:
@@ -118,7 +121,7 @@ Ejemplos:
   };
 
   // Try with cache
-  const cachedResult = memoryCache.get(cachePayload);
+  const cachedResult = memoryCache.get<IntentAnalysisResult>(cachePayload);
   if (cachedResult) {
     return cachedResult;
   }
