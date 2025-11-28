@@ -137,10 +137,19 @@ Ejemplos:
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const result = JSON.parse(jsonMatch[0]);
-      console.log('✅ Gemini análisis:', result);
+      // Ensure all required fields are present
+      const normalizedResult = {
+        intent: result.intent || 'other',
+        searchQuery: result.searchQuery || '',
+        category: result.category,
+        products: result.products,
+        productIndex: result.productIndex,
+        priceRange: result.priceRange,
+      };
+      console.log('✅ Gemini análisis:', normalizedResult);
       // Cache the result
-      memoryCache.set(cachePayload, result, GEMINI_CACHE_TTL);
-      return result;
+      memoryCache.set(cachePayload, normalizedResult, GEMINI_CACHE_TTL);
+      return normalizedResult;
     }
   } catch (error) {
     console.warn('⚠️  Gemini falló, usando fallback de keywords:', error);
